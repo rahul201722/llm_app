@@ -20,27 +20,45 @@ const openai = new OpenAI({
 
 async function callOpenRouter() {
   try {
-    // Generate a different interesting question each day
-    const today = new Date();
-    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+    // Check if a custom question is provided as command line argument
+    const customQuestion = process.argv[2];
+    let todaysQuestion;
     
-    const questions = [
-      "Explain quantum entanglement in simple terms and give a real-world analogy that anyone can understand.",
-      "If you could travel at the speed of light, how would time dilation affect your journey to the nearest star? Calculate with examples.",
-      "Design a simple algorithm to solve the Tower of Hanoi puzzle with 4 disks. Show the steps.",
-      "Explain how blockchain technology works and why it's considered secure. Use a pizza delivery analogy.",
-      "Calculate the escape velocity needed to leave Earth's gravity and explain the physics behind it.",
-      "If I flip a coin 100 times, what's the probability of getting exactly 60 heads? Show the mathematical reasoning.",
-      "Explain machine learning in cooking terms - how would you 'train' a recipe to be perfect?",
-      "Calculate how much energy the sun produces in one second and compare it to human energy consumption.",
-      "Design a simple compression algorithm and explain how it reduces file sizes.",
-      "If Earth suddenly stopped rotating, what would happen to the weather, oceans, and life? Be scientific but engaging."
-    ];
-    
-    const todaysQuestion = questions[dayOfYear % questions.length];
+    if (customQuestion) {
+      todaysQuestion = customQuestion;
+      console.log('Using custom question:', todaysQuestion);
+    } else {
+      // Load questions from external file
+      let questions;
+      try {
+        const questionsData = fs.readFileSync('questions.json', 'utf8');
+        questions = JSON.parse(questionsData);
+      } catch (err) {
+        // Fallback to default questions if file doesn't exist
+        questions = [
+          "Explain quantum entanglement in simple terms and give a real-world analogy that anyone can understand.",
+          "If you could travel at the speed of light, how would time dilation affect your journey to the nearest star? Calculate with examples.",
+          "Design a simple algorithm to solve the Tower of Hanoi puzzle with 4 disks. Show the steps.",
+          "Explain how blockchain technology works and why it's considered secure. Use a pizza delivery analogy.",
+          "Calculate the escape velocity needed to leave Earth's gravity and explain the physics behind it.",
+          "If I flip a coin 100 times, what's the probability of getting exactly 60 heads? Show the mathematical reasoning.",
+          "Explain machine learning in cooking terms - how would you 'train' a recipe to be perfect?",
+          "Calculate how much energy the sun produces in one second and compare it to human energy consumption.",
+          "Design a simple compression algorithm and explain how it reduces file sizes.",
+          "If Earth suddenly stopped rotating, what would happen to the weather, oceans, and life? Be scientific but engaging."
+        ];
+      }
+      
+      // Generate a different interesting question each day
+      const today = new Date();
+      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+      
+      todaysQuestion = questions[dayOfYear % questions.length];
+      console.log(`Today's question (day ${dayOfYear % questions.length + 1}):`, todaysQuestion);
+    }
     
     const completion = await openai.chat.completions.create({
-      model: "meta-llama/llama-3.3-8b-instruct:free",
+      model: "deepseek/deepseek-chat-v3.1:free",
       messages: [
         {
           "role": "user",
