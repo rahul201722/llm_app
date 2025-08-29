@@ -1,0 +1,2 @@
+# Run daily_llm_push.js every day at 9:00 AM
+0 9 * * * /usr/local/bin/node /Users/rahul/Desktop/React_app/llm_app/daily_llm_push.js >> /tmp/llm_daily.log 2>> /tmp/llm_daily.err

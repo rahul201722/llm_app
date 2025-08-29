@@ -1,0 +1,15 @@
+body {
+  background: #f9fafb;
+  margin: 0;
+}
+
+.App h1 {
+  color: #2d3748;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+pre {
+  font-size: 1rem;
+  color: #222;
+}
