@@ -58,8 +58,12 @@ async function callOpenRouter() {
     }
     
     const completion = await openai.chat.completions.create({
-      model: "deepseek/deepseek-chat-v3.1:free",
+      model: "z-ai/glm-4.5-air:free",
       messages: [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Respond in clean, readable format. When explaining mathematical or scientific concepts, include the relevant formulas and equations clearly. You may use mathematical notation like v = sqrt(2GM/r) for formulas. Avoid excessive formatting like ### headers, but do include mathematical content when it's educational and relevant."
+        },
         {
           "role": "user",
           "content": todaysQuestion

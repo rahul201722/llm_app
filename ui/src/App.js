@@ -7,9 +7,12 @@ function App() {
   const [parsedData, setParsedData] = useState(null);
   const [customQuestion, setCustomQuestion] = useState('');
   const [isRunning, setIsRunning] = useState(false);
+  const [showDefaultQuestions, setShowDefaultQuestions] = useState(false);
+  const [defaultQuestions, setDefaultQuestions] = useState([]);
 
   useEffect(() => {
     fetchLog();
+    fetchDefaultQuestions();
     // Refresh every 30 seconds
     const interval = setInterval(fetchLog, 30000);
     return () => clearInterval(interval);
@@ -41,11 +44,37 @@ function App() {
       });
   };
 
+  const fetchDefaultQuestions = () => {
+    fetch('/api/questions')
+      .then(res => res.json())
+      .then(data => {
+        setDefaultQuestions(data.questions || []);
+      })
+      .catch(err => {
+        console.error('Error loading default questions:', err);
+      });
+  };
+
+  const selectDefaultQuestion = (question) => {
+    setCustomQuestion(question);
+    setShowDefaultQuestions(false);
+    console.log('Selected default question:', question);
+  };
+
   const runCustomQuestion = async () => {
-    if (!customQuestion.trim()) return;
+    console.log('Button clicked! Question:', customQuestion);
+    
+    if (!customQuestion.trim()) {
+      alert('Please enter a question first!');
+      return;
+    }
     
     setIsRunning(true);
+    console.log('Starting request...');
+    
     try {
+      console.log('Sending question:', customQuestion);
+      
       const response = await fetch('/api/run-question', {
         method: 'POST',
         headers: {
@@ -54,21 +83,35 @@ function App() {
         body: JSON.stringify({ question: customQuestion }),
       });
       
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
+        const result = await response.json();
+        console.log('Success:', result);
+        alert('Question sent successfully! Check the log in a few seconds.');
+        
         // Wait a moment for the script to complete, then refresh
         setTimeout(() => {
           fetchLog();
           setCustomQuestion('');
           setIsRunning(false);
-        }, 3000);
+        }, 5000); // Increased timeout
       } else {
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
         setIsRunning(false);
-        alert('Failed to run custom question');
+        alert('Failed to run custom question: ' + errorData);
       }
     } catch (error) {
+      console.error('Network error:', error);
       setIsRunning(false);
-      alert('Error: ' + error.message);
+      alert('Network error: ' + error.message);
     }
+  };
+
+  const testButton = () => {
+    console.log('Test button clicked!');
+    alert('Button is working!');
   };
 
   const formatContent = (content) => {
@@ -128,30 +171,83 @@ function App() {
                 className="question-input"
                 rows="3"
               />
-              <button 
-                onClick={runCustomQuestion}
-                disabled={!customQuestion.trim() || isRunning}
-                className={`ask-button ${isRunning ? 'running' : ''}`}
-              >
-                {isRunning ? '🤖 Thinking...' : '🚀 Ask AI'}
-              </button>
+              <div className="button-row">
+                <button 
+                  onClick={runCustomQuestion}
+                  disabled={!customQuestion.trim() || isRunning}
+                  className={`ask-button ${isRunning ? 'running' : ''}`}
+                  type="button"
+                >
+                  {isRunning ? '🤖 Thinking...' : '🚀 Ask AI'}
+                </button>
+                <button 
+                  onClick={() => setShowDefaultQuestions(!showDefaultQuestions)}
+                  className="ask-button secondary"
+                  type="button"
+                >
+                  📋 Browse Questions
+                </button>
+                <button 
+                  onClick={testButton}
+                  className="ask-button test"
+                  type="button"
+                >
+                  🧪 Test
+                </button>
+              </div>
             </div>
+            
+            {showDefaultQuestions && (
+              <div className="default-questions-panel">
+                <div className="panel-header">
+                  <h3>📚 Choose from Default Questions</h3>
+                  <button 
+                    onClick={() => setShowDefaultQuestions(false)}
+                    className="close-btn"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="questions-list">
+                  {defaultQuestions.map((question, index) => (
+                    <div 
+                      key={index}
+                      onClick={() => selectDefaultQuestion(question)}
+                      className="question-item"
+                    >
+                      <div className="question-number">{index + 1}</div>
+                      <div className="question-text">{question}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div className="quick-examples">
               <span>Quick examples:</span>
               <button 
-                onClick={() => setCustomQuestion("Explain black holes in simple terms")}
+                onClick={() => {
+                  setCustomQuestion("Explain black holes in simple terms");
+                  console.log('Set question: Explain black holes in simple terms');
+                }}
                 className="example-btn"
               >
                 Black Holes
               </button>
               <button 
-                onClick={() => setCustomQuestion("How does cryptocurrency mining work?")}
+                onClick={() => {
+                  setCustomQuestion("How does cryptocurrency mining work?");
+                  console.log('Set question: How does cryptocurrency mining work?');
+                }}
                 className="example-btn"
               >
                 Crypto Mining
               </button>
               <button 
-                onClick={() => setCustomQuestion("What is the biggest unsolved math problem?")}
+                onClick={() => {
+                  setCustomQuestion("What is the biggest unsolved math problem?");
+                  console.log('Set question: What is the biggest unsolved math problem?');
+                }}
                 className="example-btn"
               >
                 Math Mysteries

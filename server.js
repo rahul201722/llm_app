@@ -18,18 +18,40 @@ app.get('/api/log', (req, res) => {
   }
 });
 
+app.get('/api/questions', (req, res) => {
+  const questionsPath = path.join(__dirname, 'questions.json');
+  if (fs.existsSync(questionsPath)) {
+    try {
+      const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
+      res.json({ questions });
+    } catch (error) {
+      console.error('Error reading questions file:', error);
+      res.status(500).json({ error: 'Failed to load questions' });
+    }
+  } else {
+    res.json({ questions: [] });
+  }
+});
+
 app.post('/api/run-question', (req, res) => {
+  console.log('Received request body:', req.body);
   const { question } = req.body;
   
   if (!question || !question.trim()) {
+    console.log('Error: No question provided');
     return res.status(400).json({ error: 'Question is required' });
   }
+  
+  console.log('Processing question:', question);
   
   try {
     // Run the script with the custom question
     const command = `node daily_llm_push.js "${question.replace(/"/g, '\\"')}"`;
-    execSync(command, { cwd: __dirname });
+    console.log('Running command:', command);
     
+    execSync(command, { cwd: __dirname, stdio: 'inherit' });
+    
+    console.log('Command completed successfully');
     res.json({ success: true, message: 'Question processed successfully' });
   } catch (error) {
     console.error('Error running custom question:', error.message);
